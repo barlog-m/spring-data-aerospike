@@ -73,7 +73,7 @@ public class AerospikeTemplateFindByQueryTests extends BaseBlockingIntegrationTe
     }
 
     @Test
-    public void testFindWithFilterEqualOrderBy() {
+    public void testFindWithFilterEqualOrderByAsc() {
         Query query = createQueryForMethodWithArgs("findByLastNameOrderByFirstNameAsc", "Matthews");
 
         Stream<Person> result = template.find(query, Person.class);

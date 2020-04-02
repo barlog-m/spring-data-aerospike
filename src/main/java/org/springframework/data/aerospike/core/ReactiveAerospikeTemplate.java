@@ -364,14 +364,8 @@ public class ReactiveAerospikeTemplate extends BaseAerospikeTemplate implements 
         Flux<T> results = findAllUsingQuery(type, null, qualifier);
 
         if (query.getSort() != null && query.getSort().isSorted()) {
-            Comparator comparator = getComparator(query);
-            results = results.collectList()
-                    .map(list -> {
-                        List<T> sorted = new ArrayList<>(list);
-                        sorted.sort(comparator);
-                        return sorted;
-                    })
-                    .flatMapMany(list -> Flux.fromIterable((List<T>)list));
+            Comparator<T> comparator = getComparator(query);
+            results = results.sort(comparator);
         }
 
         if(query.hasOffset()) {
