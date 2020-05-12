@@ -1,15 +1,17 @@
 /*
  * Copyright 2016 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * https://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.springframework.data.aerospike.cache;
@@ -32,173 +34,172 @@ import org.springframework.util.Assert;
 import java.util.*;
 
 /**
- * {@link CacheManager} implementation for Aerospike. By default {@link AerospikeCache}s will be
- * lazily initialized for each {@link #getCache(String)} request unless a set of predefined cache
- * names is provided. <br>
+ * {@link CacheManager} implementation for Aerospike. By default {@link AerospikeCache}s
+ * will be lazily initialized for each {@link #getCache(String)} request unless a set of
+ * predefined cache names is provided. <br>
  * <br>
- * Setting {@link #setTransactionAware(boolean)} to <code>true</code> will force Caches to be
- * decorated as {@link TransactionAwareCacheDecorator} so values will only be written to the cache
- * after successful commit of surrounding transaction.
+ * Setting {@link #setTransactionAware(boolean)} to <code>true</code> will force Caches to
+ * be decorated as {@link TransactionAwareCacheDecorator} so values will only be written
+ * to the cache after successful commit of surrounding transaction.
  * 
  * @author Venil Noronha
  */
-// TODO: extract this to the separate repository aerospike-spring-cache
+//TODO: extract this to the separate repository aerospike-spring-cache
 public class AerospikeCacheManager extends AbstractTransactionSupportingCacheManager {
 
-    protected static final String DEFAULT_NAMESPACE = "aerospike";
+	protected static final String DEFAULT_NAMESPACE = "aerospike";
 
-    private final AerospikeClient aerospikeClient;
-    private final AerospikeConverter aerospikeConverter;
-    private final String namespace;
-    private final Set<String> configuredCacheNames;
+	private final AerospikeClient aerospikeClient;
+	private final AerospikeConverter aerospikeConverter;
+	private final String namespace;
+	private final Set<String> configuredCacheNames;
 
-    /**
-     * Create a new {@link AerospikeCacheManager} instance with no caches and with the set name
-     * "aerospike".
-     * 
-     * @param aerospikeClient    the {@link AerospikeClient} instance.
-     * @param aerospikeConverter
-     */
-    public AerospikeCacheManager(AerospikeClient aerospikeClient,
-            MappingAerospikeConverter aerospikeConverter) {
-        this(aerospikeClient, Collections.<String>emptyList(), aerospikeConverter);
-    }
+	/**
+	 * Create a new {@link AerospikeCacheManager} instance with no caches and with the
+	 * set name "aerospike".
+	 * 
+	 * @param aerospikeClient the {@link AerospikeClient} instance.
+	 * @param aerospikeConverter
+	 */
+	public AerospikeCacheManager(AerospikeClient aerospikeClient, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, Collections.<String>emptyList(), aerospikeConverter);
+	}
 
-    /**
-     * Create a new {@link AerospikeCacheManager} instance with no caches and with the specified set
-     * name.
-     * 
-     * @param aerospikeClient    the {@link AerospikeClient} instance.
-     * @param namespace          the namespace name.
-     * @param aerospikeConverter
-     */
-    public AerospikeCacheManager(AerospikeClient aerospikeClient, String namespace,
-            MappingAerospikeConverter aerospikeConverter) {
-        this(aerospikeClient, Collections.<String>emptyList(), namespace, aerospikeConverter);
-    }
+	/**
+	 * Create a new {@link AerospikeCacheManager} instance with no caches and with the
+	 * specified set name.
+	 * 
+	 * @param aerospikeClient the {@link AerospikeClient} instance.
+	 * @param namespace the namespace name.
+	 * @param aerospikeConverter
+	 */
+	public AerospikeCacheManager(AerospikeClient aerospikeClient, String namespace, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, Collections.<String>emptyList(), namespace, aerospikeConverter);
+	}
 
-    /**
-     * Create a new {@link AerospikeCacheManager} instance with the specified caches and with the
-     * set name "aerospike".
-     * 
-     * @param aerospikeClient    the {@link AerospikeClient} instance.
-     * @param cacheNames         the default caches to create.
-     * @param aerospikeConverter
-     */
-    public AerospikeCacheManager(AerospikeClient aerospikeClient, Collection<String> cacheNames,
-            MappingAerospikeConverter aerospikeConverter) {
-        this(aerospikeClient, cacheNames, DEFAULT_NAMESPACE, aerospikeConverter);
-    }
+	/**
+	 * Create a new {@link AerospikeCacheManager} instance with the specified caches and
+	 * with the set name "aerospike".
+	 * 
+	 * @param aerospikeClient the {@link AerospikeClient} instance.
+	 * @param cacheNames the default caches to create.
+	 * @param aerospikeConverter
+	 */
+	public AerospikeCacheManager(AerospikeClient aerospikeClient,
+								 Collection<String> cacheNames, MappingAerospikeConverter aerospikeConverter) {
+		this(aerospikeClient, cacheNames, DEFAULT_NAMESPACE, aerospikeConverter);
+	}
 
-    /**
-     * Create a new {@link AerospikeCacheManager} instance with the specified caches and with the
-     * specified set name.
-     * 
-     * @param aerospikeClient    the {@link AerospikeClient} instance.
-     * @param cacheNames         the default caches to create.
-     * @param namespace          the namespace name.
-     * @param aerospikeConverter
-     */
-    public AerospikeCacheManager(AerospikeClient aerospikeClient, Collection<String> cacheNames,
-            String namespace, MappingAerospikeConverter aerospikeConverter) {
-        Assert.notNull(aerospikeClient, "AerospikeClient must not be null");
-        Assert.notNull(cacheNames, "Cache names must not be null");
-        Assert.notNull(namespace, "Namespace name must not be null");
-        this.aerospikeClient = aerospikeClient;
-        this.aerospikeConverter = aerospikeConverter;
-        this.namespace = namespace;
-        this.configuredCacheNames = new LinkedHashSet<String>(cacheNames);
-    }
+	/**
+	 * Create a new {@link AerospikeCacheManager} instance with the specified caches and
+	 * with the specified set name.
+	 * 
+	 * @param aerospikeClient the {@link AerospikeClient} instance.
+	 * @param cacheNames the default caches to create.
+	 * @param namespace the namespace name.
+	 * @param aerospikeConverter
+	 */
+	public AerospikeCacheManager(AerospikeClient aerospikeClient,
+                                 Collection<String> cacheNames, String namespace, MappingAerospikeConverter aerospikeConverter) {
+		Assert.notNull(aerospikeClient, "AerospikeClient must not be null");
+		Assert.notNull(cacheNames, "Cache names must not be null");
+		Assert.notNull(namespace, "Namespace name must not be null");
+		this.aerospikeClient = aerospikeClient;
+		this.aerospikeConverter = aerospikeConverter;
+		this.namespace = namespace;
+		this.configuredCacheNames = new LinkedHashSet<String>(cacheNames);
+	}
 
-    @Override
-    protected Collection<? extends Cache> loadCaches() {
-        List<AerospikeCache> caches = new ArrayList<AerospikeCache>();
-        for (String cacheName : configuredCacheNames) {
-            caches.add(createCache(cacheName));
-        }
-        return caches;
-    }
+	@Override
+	protected Collection<? extends Cache> loadCaches() {
+		List<AerospikeCache> caches = new ArrayList<AerospikeCache>();
+		for (String cacheName : configuredCacheNames) {
+			caches.add(createCache(cacheName));
+		}
+		return caches;
+	}
 
-    @Override
-    protected Cache getMissingCache(String cacheName) {
-        return createCache(cacheName);
-    }
+	@Override
+	protected Cache getMissingCache(String cacheName) {
+		return createCache(cacheName);
+	}
 
-    protected AerospikeCache createCache(String cacheName) {
-        return new AerospikeSerializingCache(cacheName);
-    }
+	protected AerospikeCache createCache(String cacheName) {
+		return new AerospikeSerializingCache(cacheName);
+	}
 
-    @Override
-    public Cache getCache(String name) {
-        Cache cache = lookupAerospikeCache(name);
-        if (cache != null) {
-            return cache;
-        } else {
-            Cache missingCache = getMissingCache(name);
-            if (missingCache != null) {
-                addCache(missingCache);
-                return lookupAerospikeCache(name); // may be decorated
-            }
-            return null;
-        }
-    }
+	@Override
+	public Cache getCache(String name) {
+		Cache cache = lookupAerospikeCache(name);
+		if (cache != null) {
+			return cache;
+		}
+		else {
+			Cache missingCache = getMissingCache(name);
+			if (missingCache != null) {
+				addCache(missingCache);
+				return lookupAerospikeCache(name);  // may be decorated
+			}
+			return null;
+		}
+	}
 
-    protected Cache lookupAerospikeCache(String name) {
-        return lookupCache(namespace + ":" + name);
-    }
+	protected Cache lookupAerospikeCache(String name) {
+		return lookupCache(namespace + ":" + name);
+	}
 
-    @Override
-    protected Cache decorateCache(Cache cache) {
-        if (isCacheAlreadyDecorated(cache)) {
-            return cache;
-        }
-        return super.decorateCache(cache);
-    }
+	@Override
+	protected Cache decorateCache(Cache cache) {
+		if (isCacheAlreadyDecorated(cache)) {
+			return cache;
+		}
+		return super.decorateCache(cache);
+	}
 
-    protected boolean isCacheAlreadyDecorated(Cache cache) {
-        return isTransactionAware() && cache instanceof TransactionAwareCacheDecorator;
-    }
+	protected boolean isCacheAlreadyDecorated(Cache cache) {
+		return isTransactionAware() && cache instanceof TransactionAwareCacheDecorator;
+	}
 
-    public class AerospikeSerializingCache extends AerospikeCache {
+	public class AerospikeSerializingCache extends AerospikeCache {
 
-        public AerospikeSerializingCache(String name) {
-            super(AerospikeCacheManager.this.namespace, name, aerospikeClient, -1);
-        }
+		public AerospikeSerializingCache(String name) {
+			super(AerospikeCacheManager.this.namespace, name, aerospikeClient, -1);
+		}
 
-        @Override
-        public <T> T get(Object key, Class<T> type) {
-            Key dbKey = getKey(key);
-            Record record = client.get(null, dbKey);
-            if (record != null) {
-                AerospikeReadData data = AerospikeReadData.forRead(dbKey, record);
-                T value = aerospikeConverter.read(type, data);
-                return value;
-            }
-            return null;
-        }
+		@Override
+		public <T> T get(Object key, Class<T> type) {
+			Key dbKey = getKey(key);
+			Record record =  client.get(null, dbKey);
+			if (record != null) {
+				AerospikeReadData data = AerospikeReadData.forRead(dbKey, record);
+				T value = aerospikeConverter.read(type,  data);
+				return value;
+			}
+			return null;
+		}
 
-        @Override
-        public ValueWrapper get(Object key) {
-            Object value = get(key, Object.class);
-            return (value != null ? new SimpleValueWrapper(value) : null);
-        }
+		@Override
+		public ValueWrapper get(Object key) {
+			Object value = get(key, Object.class);
+			return (value != null ? new SimpleValueWrapper(value) : null);
+		}
 
-        private void serializeAndPut(WritePolicy writePolicy, Object key, Object value) {
-            AerospikeWriteData data = AerospikeWriteData.forWrite();
-            aerospikeConverter.write(value, data);
-            client.put(writePolicy, getKey(key), data.getBinsAsArray());
-        }
+		private void serializeAndPut(WritePolicy writePolicy, Object key, Object value) {
+			AerospikeWriteData data = AerospikeWriteData.forWrite();
+			aerospikeConverter.write(value, data);
+			client.put(writePolicy, getKey(key), data.getBinsAsArray());
+		}
 
-        @Override
-        public void put(Object key, Object value) {
-            serializeAndPut(null, key, value);
-        }
+		@Override
+		public void put(Object key, Object value) {
+			serializeAndPut(null, key, value);
+		}
 
-        @Override
-        public ValueWrapper putIfAbsent(Object key, Object value) {
-            serializeAndPut(createOnly, key, value);
-            return get(key);
-        }
-    }
+		@Override
+		public ValueWrapper putIfAbsent(Object key, Object value) {
+			serializeAndPut(createOnly, key, value);
+			return get(key);
+		}
+	}
 
 }
