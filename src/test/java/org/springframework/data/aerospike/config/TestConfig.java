@@ -58,7 +58,7 @@ public class TestConfig extends AbstractReactiveAerospikeDataConfiguration  {
 
 	@Bean
 	public CacheManager cacheManager(AerospikeClient aerospikeClient, MappingAerospikeConverter aerospikeConverter) {
-		return new AerospikeCacheManager(aerospikeClient, aerospikeConverter);
+		return new AerospikeCacheManager(aerospikeClient, namespace, aerospikeConverter);
 	}
 
 	@Bean

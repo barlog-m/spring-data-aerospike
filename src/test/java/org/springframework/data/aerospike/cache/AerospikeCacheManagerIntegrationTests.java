@@ -15,6 +15,7 @@ public class AerospikeCacheManagerIntegrationTests extends BaseBlockingIntegrati
 
     private static final String KEY = "foo";
     private static final String VALUE = "bar";
+    private static final String SET = "TEST";
 
     @Autowired
     AerospikeClient client;
@@ -24,7 +25,7 @@ public class AerospikeCacheManagerIntegrationTests extends BaseBlockingIntegrati
     @AfterEach
     public void tearDown() {
         cachingComponent.reset();
-        client.delete(null, new Key(getNameSpace(), AerospikeCacheManager.DEFAULT_SET_NAME, KEY));
+        client.delete(null, new Key(getNameSpace(), SET, KEY));
     }
 
     @Test
